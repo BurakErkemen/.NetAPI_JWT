@@ -2,7 +2,7 @@
 using CoreLayer.DTOs;
 using CoreLayer.Models;
 
-namespace CoreLayer.Services
+namespace CoreLayer.UnitOfWork
 {
     public interface ITokenService
     {

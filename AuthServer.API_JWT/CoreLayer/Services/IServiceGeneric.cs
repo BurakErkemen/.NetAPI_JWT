@@ -1,7 +1,7 @@
 ﻿using SharedLibrary.DTO;
 using System.Linq.Expressions;
 
-namespace CoreLayer.Services
+namespace CoreLayer.UnitOfWork
 {
     public interface IServiceGeneric <TEntity,TDto> where TEntity : class where TDto : class
     {
