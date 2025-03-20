@@ -15,7 +15,7 @@ namespace SharedLibrary.DTO
             return new Response<T> { Data = data, StatusCode = statusCode , IsSuccessful = true};
         }
 
-        public static Response<T> Succes(int statusCode)
+        public static Response<T> Success(int statusCode)
         {
             return new Response<T> { Data = default, StatusCode = statusCode , IsSuccessful = true};
         }
