@@ -7,6 +7,6 @@ namespace CoreLayer.UnitOfWork
     public interface ITokenService
     {
         TokenDto CreateToken(UserAppModel userAppModel);
-        ClientTokenDto ClientTokenDto(Client client);
+        ClientTokenDto CreateTokenByClient(Client client);
     }
 }

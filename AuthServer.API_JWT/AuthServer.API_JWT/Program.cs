@@ -1,3 +1,6 @@
+using CoreLayer.Configuration;
+using SharedLibrary.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +9,13 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+// TokenOptions yapýlandýrmasýný ekleyin
+builder.Services.Configure<CustomTokenOptions>(builder.Configuration.GetSection("TokenOptions"));
+builder.Services.Configure<ClientOptions>(builder.Configuration.GetSection("Clients"));
+
+
 
 var app = builder.Build();
 

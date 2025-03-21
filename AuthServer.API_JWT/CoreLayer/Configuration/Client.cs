@@ -8,4 +8,9 @@
 
         public List<string>? Audiences { get; set; } // www.myapi.com gibi
     }
+
+    public class ClientOptions
+    {
+        public List<Client> Clients { get; set; } = new();
+    }
 }
