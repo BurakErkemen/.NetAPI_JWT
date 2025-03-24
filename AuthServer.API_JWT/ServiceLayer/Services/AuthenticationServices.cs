@@ -73,7 +73,7 @@ namespace ServiceLayer.Services
         {
             var client = _clients.SingleOrDefault(x => x.Id == clientLoginDto.ClientId && x.Secret == clientLoginDto.ClientSecret);
 
-            if (client is null)
+            if (client == null)
                 return Response<ClientTokenDto>.Fail("ClientId or ClientSecret is not found", 404, true);
 
             var token = _tokenService.CreateTokenByClient(client);
