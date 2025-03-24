@@ -1,3 +1,6 @@
+using SharedLibrary.Configuration;
+using SharedLibrary.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -9,6 +12,21 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+
+builder.Services.Configure<CustomTokenOptions>(builder.Configuration.GetSection("TokenOptions"));
+
+
+var tokenOptions = builder.Configuration.GetSection("TokenOptions").Get<CustomTokenOptions>();
+
+if (tokenOptions == null)
+{
+    throw new Exception("TokenOptions yüklenemedi! Lütfen appsettings.json dosyanýzý kontrol edin.");
+}
+
+builder.Services.AddCustomTokenAuth(tokenOptions);
+
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -17,7 +35,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthorization();
 app.UseAuthorization();
 
 app.MapControllers();

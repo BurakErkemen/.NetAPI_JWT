@@ -7,6 +7,11 @@ namespace DataLayer
 {
     public class AppDbContext : IdentityDbContext<UserAppModel, IdentityRole, string>
     {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+
+
         public DbSet<ProductModel> Products { get; set; }
         public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
@@ -19,5 +24,6 @@ namespace DataLayer
 
             base.OnModelCreating(modelBuilder);
         }
+
     }
 }

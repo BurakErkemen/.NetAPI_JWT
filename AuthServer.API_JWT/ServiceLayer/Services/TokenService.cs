@@ -3,6 +3,7 @@ using CoreLayer.DTOs;
 using CoreLayer.Models;
 using CoreLayer.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SharedLibrary.Configuration;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,18 +12,17 @@ using System.Security.Cryptography;
 
 namespace ServiceLayer.Services
 {
-    public class TokenService(UserManager<UserAppModel> userMenager, CustomTokenOptions customTokenOptions) : ITokenService
+    public class TokenService(UserManager<UserAppModel> userManager, IOptions<CustomTokenOptions> customTokenOptions) : ITokenService
     {
+        private readonly CustomTokenOptions _customTokenOptions = customTokenOptions.Value;
+
         private string CreateRefreshToken()
         {
-            var numberByte = new Byte[32];
+            var numberByte = new byte[32];
             using var rnd = RandomNumberGenerator.Create();
-
             rnd.GetBytes(numberByte);
-
             return Convert.ToBase64String(numberByte);
         }
-
 
         private IEnumerable<Claim> GetClaim(UserAppModel userApp, List<string> audiences)
         {
@@ -31,7 +31,7 @@ namespace ServiceLayer.Services
                 new Claim(ClaimTypes.NameIdentifier, userApp.Id),
                 new Claim(JwtRegisteredClaimNames.Email, userApp.Email!),
                 new Claim(ClaimTypes.Name, userApp.UserName!),
-                new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.Email, userApp.Email!)
             };
 
@@ -42,25 +42,26 @@ namespace ServiceLayer.Services
 
         private IEnumerable<Claim> GetClaimByClient(Client client)
         {
-            var claims = new List<Claim>();
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, client.Id!.ToString())
+            };
+
             claims.AddRange(client.Audiences!.Select(x => new Claim(JwtRegisteredClaimNames.Aud, x)));
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString());
-            new Claim(JwtRegisteredClaimNames.Sub, client.Id!.ToString());
 
             return claims;
         }
 
-
         public ClientTokenDto CreateTokenByClient(Client client)
         {
-            var accessTokenExpiration = DateTime.Now.AddMinutes(customTokenOptions.AccessTokenExpiration);
+            var accessTokenExpiration = DateTime.Now.AddMinutes(_customTokenOptions.AccessTokenExpiration);
+            var securityKey = SignService.GetSymmetricSecurityKey(_customTokenOptions.SecurityKey);
 
-            var securityKey = SignService.GetSymmetricSecurityKey(customTokenOptions.SecurityKey);
+            var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
 
-            SigningCredentials signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
-
-            JwtSecurityToken jwtSecurityToken = new JwtSecurityToken(
-                issuer: customTokenOptions.Issuer,
+            var jwtSecurityToken = new JwtSecurityToken(
+                issuer: _customTokenOptions.Issuer,
                 expires: accessTokenExpiration,
                 notBefore: DateTime.Now,
                 claims: GetClaimByClient(client),
@@ -68,7 +69,6 @@ namespace ServiceLayer.Services
             );
 
             var handler = new JwtSecurityTokenHandler();
-
             var token = handler.WriteToken(jwtSecurityToken);
 
             return new ClientTokenDto
@@ -80,23 +80,21 @@ namespace ServiceLayer.Services
 
         public TokenDto CreateToken(UserAppModel userAppModel)
         {
-            var accessTokenExpiration = DateTime.Now.AddMinutes(customTokenOptions.AccessTokenExpiration);
-            var refreshTokenExpiration = DateTime.Now.AddMinutes(customTokenOptions.RefreshTokenExpiration);
+            var accessTokenExpiration = DateTime.Now.AddMinutes(_customTokenOptions.AccessTokenExpiration);
+            var refreshTokenExpiration = DateTime.Now.AddMinutes(_customTokenOptions.RefreshTokenExpiration);
 
-            var securityKey = SignService.GetSymmetricSecurityKey(customTokenOptions.SecurityKey);
+            var securityKey = SignService.GetSymmetricSecurityKey(_customTokenOptions.SecurityKey);
+            var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
 
-            SigningCredentials signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
-
-            JwtSecurityToken jwtSecurityToken = new JwtSecurityToken(
-                issuer: customTokenOptions.Issuer,
+            var jwtSecurityToken = new JwtSecurityToken(
+                issuer: _customTokenOptions.Issuer,
                 expires: accessTokenExpiration,
                 notBefore: DateTime.Now,
-                claims: GetClaim(userAppModel, customTokenOptions.Audience),
+                claims: GetClaim(userAppModel, _customTokenOptions.Audience),
                 signingCredentials: signingCredentials
             );
 
             var handler = new JwtSecurityTokenHandler();
-
             var token = handler.WriteToken(jwtSecurityToken);
 
             return new TokenDto
@@ -107,6 +105,5 @@ namespace ServiceLayer.Services
                 RefreshTokenExpiration = refreshTokenExpiration
             };
         }
-
     }
 }

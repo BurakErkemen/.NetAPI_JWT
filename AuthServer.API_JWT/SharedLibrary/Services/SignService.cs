@@ -3,7 +3,7 @@ using System.Text;
 
 namespace ServiceLayer.Services
 {
-    internal static class SignService
+    public static class SignService
     {
         public static SecurityKey GetSymmetricSecurityKey(string securityKey)
         {

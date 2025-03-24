@@ -10,7 +10,7 @@ using SharedLibrary.DTO;
 
 namespace ServiceLayer.Services
 {
-    public class AuthenticationService : IAuthenticationService
+    public class AuthenticationServices : IAuthenticationServices
     {
         private readonly List<Client> _clients;
         private readonly ITokenService _tokenService;
@@ -19,7 +19,7 @@ namespace ServiceLayer.Services
         private readonly UserManager<UserAppModel> _userManager;
 
 
-        public AuthenticationService(IOptions<List<Client>> clients, ITokenService tokenService, IUnitOfWork unitOfWork, IGenericRepository<UserRefreshToken> genericRepository, UserManager<UserAppModel> userManager)
+        public AuthenticationServices(IOptions<List<Client>> clients, ITokenService tokenService, IUnitOfWork unitOfWork, IGenericRepository<UserRefreshToken> genericRepository, UserManager<UserAppModel> userManager)
         {
             _clients = clients.Value;
             _tokenService = tokenService;
@@ -46,10 +46,23 @@ namespace ServiceLayer.Services
             var userRefreshToken = await _genericRepository.Where(x => x.UserId == user.Id).SingleOrDefaultAsync();
 
             if (userRefreshToken is null)
-                await _genericRepository.AddAsync(new UserRefreshToken { UserId = user.Id, Token = token.RefreshToken, Expiration = token.RefreshTokenExpiration });
+            {
+                userRefreshToken = new UserRefreshToken
+                {
+                    UserId = user.Id,
+                    Token = token.RefreshToken,
+                    Expiration = token.RefreshTokenExpiration
+                };
 
-            userRefreshToken!.Token = token.RefreshToken;
-            userRefreshToken!.Expiration = token.RefreshTokenExpiration;
+                await _genericRepository.AddAsync(userRefreshToken);
+            }
+            else
+            {
+                userRefreshToken.Token = token.RefreshToken;
+                userRefreshToken.Expiration = token.RefreshTokenExpiration;
+            }
+
+
 
             await _unitOfWork.SaveChangesAsync();
 

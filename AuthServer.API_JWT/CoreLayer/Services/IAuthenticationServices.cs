@@ -3,7 +3,7 @@ using SharedLibrary.DTO;
 
 namespace CoreLayer.UnitOfWork
 {
-    public interface IAuthenticationService
+    public interface IAuthenticationServices
     {
         Task<Response<TokenDto>> CreateTokenAsync(LoginDto loginDto);
         Task<Response<TokenDto>> CreateTokenByRefreshToken(string refreshToken);
