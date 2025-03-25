@@ -41,7 +41,7 @@ namespace ServiceLayer.Services
             if (!await _userManager.CheckPasswordAsync(user, loginDto.Password))
                 return Response<TokenDto>.Fail("Email or password is wrong", 400, true);
 
-            var token = _tokenService.CreateToken(user);
+            var token =await _tokenService.CreateToken(user);
 
             var userRefreshToken = await _genericRepository.Where(x => x.UserId == user.Id).SingleOrDefaultAsync();
 
@@ -93,7 +93,7 @@ namespace ServiceLayer.Services
             if (user is null)
                 return Response<TokenDto>.Fail("User not found", 404, true);
 
-            var token = _tokenService.CreateToken(user);
+            var token =await _tokenService.CreateToken(user);
 
             anyRefreshToken.Token = token.RefreshToken;
             anyRefreshToken.Expiration = token.RefreshTokenExpiration;

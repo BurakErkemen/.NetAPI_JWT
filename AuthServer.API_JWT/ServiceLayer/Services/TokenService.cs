@@ -24,18 +24,22 @@ namespace ServiceLayer.Services
             return Convert.ToBase64String(numberByte);
         }
 
-        private IEnumerable<Claim> GetClaim(UserAppModel userApp, List<string> audiences)
+        private async Task<IEnumerable<Claim>> GetClaim(UserAppModel userApp, List<string> audiences)
         {
+            var userRole = await userManager.GetRolesAsync(userApp);
+
+
             var userList = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userApp.Id),
                 new Claim(JwtRegisteredClaimNames.Email, userApp.Email!),
                 new Claim(ClaimTypes.Name, userApp.UserName!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Email, userApp.Email!)
+                new Claim(ClaimTypes.Email, userApp.Email!),
             };
 
             userList.AddRange(audiences.Select(x => new Claim(JwtRegisteredClaimNames.Aud, x)));
+            userList.AddRange(userRole.Select(x => new Claim(ClaimTypes.Role, x)));
 
             return userList;
         }
@@ -78,7 +82,7 @@ namespace ServiceLayer.Services
             };
         }
 
-        public TokenDto CreateToken(UserAppModel userAppModel)
+        public async Task<TokenDto> CreateToken(UserAppModel userAppModel)
         {
             var accessTokenExpiration = DateTime.Now.AddMinutes(_customTokenOptions.AccessTokenExpiration);
             var refreshTokenExpiration = DateTime.Now.AddMinutes(_customTokenOptions.RefreshTokenExpiration);
@@ -90,7 +94,7 @@ namespace ServiceLayer.Services
                 issuer: _customTokenOptions.Issuer,
                 expires: accessTokenExpiration,
                 notBefore: DateTime.Now,
-                claims: GetClaim(userAppModel, _customTokenOptions.Audience),
+                claims: await GetClaim(userAppModel, _customTokenOptions.Audience),
                 signingCredentials: signingCredentials
             );
 

@@ -23,6 +23,12 @@ namespace AuthServer.API_JWT.Controllers
             return CreateActionResultInstance(await userService.GetUserByNameAsync(HttpContext.User.Identity!.Name!));
         }
 
+        [HttpPost("CreateUserRole/{userName}")]
+        public async Task<IActionResult> CreateUserRole(string userName)
+        {
+            var result = await userService.CreateUserRole(userName);
+            return CreateActionResultInstance(result);
+        }
 
     }
 }

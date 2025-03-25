@@ -6,7 +6,7 @@ using SharedLibrary.DTO;
 
 namespace ServiceLayer.Services
 {
-    public class UserService(UserManager<UserAppModel> userManager) : IUserService
+    public class UserService(UserManager<UserAppModel> userManager,RoleManager<IdentityRole> roleManager) : IUserService
     {
         public async Task<Response<UserModelDto>> CreateUserAsync(CreateUserDto createUserDto)
         {
@@ -25,6 +25,27 @@ namespace ServiceLayer.Services
             }
 
             return Response<UserModelDto>.Success(ObjectMapper.Mapper.Map<UserModelDto>(user), 200);
+        }
+
+        public async Task<Response<NoDataDTO>> CreateUserRole(string userName)
+        {
+            if (!await roleManager.RoleExistsAsync("Admin"))
+            {
+                await roleManager.CreateAsync(new IdentityRole("Admin"));
+                await roleManager.CreateAsync(new IdentityRole("User"));
+            }
+           
+
+            var user = await userManager.FindByNameAsync(userName);
+
+            if (user is null)
+            {
+                return Response<NoDataDTO>.Fail("User not found", 404, true);
+            }
+
+            await userManager.AddToRoleAsync(user, "Admin");
+
+            return Response<NoDataDTO>.Success(201);
         }
 
         public async Task<Response<UserModelDto>> GetUserByNameAsync(string userName)

@@ -8,5 +8,8 @@ namespace CoreLayer.UnitOfWork
         Task<Response<UserModelDto>> CreateUserAsync(CreateUserDto createUserDto);
 
         Task<Response<UserModelDto>> GetUserByNameAsync(string userName);
+
+        Task<Response<NoDataDTO>> CreateUserRole(string userName);
+
     }
 }
